@@ -20,11 +20,10 @@ searchButton.id = "search-submit"
 searchButton.className = "search-submit";
 searchButton.value = 'submit';
 
-const header = document.querySelector('header');
+const header = document.querySelector('header').lastElementChild.lastElementChild;
 header.appendChild(form);
 form.appendChild(input);
 form.appendChild(searchButton);
-form.style.display = 'inline-block';
 
 
 // the fetch calls 12 employees each time the page refreshes
@@ -34,26 +33,49 @@ fetch('https://randomuser.me/api/?results=12')
 
 // this function creates an html for the 12 employees and let's a modal view pop up when an employee is clicked
 function createHTML (data) {
-  // underneath an html card is made and displayed for each employee
-  console.log(data);
-  let html ='';
+
+  // underneath an html card is made and displayed for all 12 employee
+  let cardHtml ='';
   data.map((employee) => {
-    return html += createCard(employee);
+    return cardHtml += createCard(employee);
   })
-  console.log(html)
+  gallery.insertAdjacentHTML('beforeend', cardHtml)
 
-  gallery.insertAdjacentHTML('beforeend', html)
+  // the eventlistener underneath displays a new employeelist based on the user search
+  let filteredList = [];
+  form.addEventListener('submit', (e) => {
+    filteredList = [];
+    let text = input.value.toLowerCase();
+    for (let i = 0; i <data.length ; i++){
+      if (data[i].name.first.toLowerCase().includes(text) || data[i].name.last.toLowerCase().includes(text) ){
+        filteredList = filteredList.concat(data[i]);
+      }
+    }
 
-  // underneath there is a modal window created when an employee is clicked
+    let cardHtml ='';
+    if (filteredList.length > 0){
+      gallery.innerHTML = '';
+      filteredList.map((employee) => {
+        return cardHtml += createCard(employee);
+      })
+    } else{
+      data.map((employee) => {
+        return cardHtml += createCard(employee);
+      })
+    }
+    gallery.insertAdjacentHTML('beforeend', cardHtml)
+  });
+
+  // This eventlistener creates 'click' interactivity for the user. Handels multiple functions
   gallery.addEventListener('click', (e) => {
     let clickedEmployee = e.target;
     if(clickedEmployee.className !== "card"){
-      if(clickedEmployee.tagName === 'BUTTON' || clickedEmployee.tagName === 'STRONG'){
+      if(clickedEmployee.id === "modal-close-btn" || clickedEmployee.tagName === 'STRONG' || clickedEmployee.id === "modal-container" ){
         let closingButton = clickedEmployee
         if(closingButton.textContent === 'X'){
           closingButton = closingButton.parentNode
         }
-        gallery.removeChild(gallery.lastElementChild)
+        return gallery.removeChild(gallery.lastElementChild)
 
       } else if(clickedEmployee.className === "card-img-container" || clickedEmployee.className === "card-info-container"){
         clickedEmployee = clickedEmployee.parentNode;
@@ -64,50 +86,43 @@ function createHTML (data) {
       }
     }
 
-
+    //the function underneath creates the modal view for the clickedEmployee
     for(let i =0; i<data.length; i++){
-      let modalHtml=''
+      let modalHtml='';
       clickedEmployeeName = clickedEmployee.lastElementChild.firstElementChild.id;
+
       if(data[i].name.last === clickedEmployeeName){
-        // console.log(data[i])
-        modalHtml =`
-        <div id="modal-container" class="modal-container">
-            <div class="modal">
-                <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
-                <div class="modal-info-container">
-                    <img class="modal-img" src="${data[i].picture.large}" alt="profile picture">
-                    <h3 id="name" class="modal-name cap">${data[i].name.first} ${data[i].name.last}</h3>
-                    <p class="modal-text">${data[i].email}</p>
-                    <p class="modal-text cap">${data[i].location.city}</p>
-                    <hr>
-                    <p class="modal-text">${reformatPhoneNumber(data[i].phone)}</p>
-                    <p class="modal-text">${data[i].location.street.number} ${data[i].location.street.name}, ${data[i].location.state}, ${data[i].nat} ${data[i].location.postcode}</p>
-                    <p class="modal-text">Birthday: ${reformatBirthday(data[i].registered.date)}</p>
-                </div>
-            </div>
-        </div>
-        `
+        modalHtml = createModal(data[i])
+        gallery.insertAdjacentHTML('beforeend', modalHtml)
       }
-      gallery.insertAdjacentHTML('beforeend', modalHtml)
     }
-  });
-}
 
-// this function reformats the employees phone number.
-function reformatPhoneNumber(phone) {
-    phone = phone.replace(/[^\d]/g, "");
-    if (phone.length == 10) {
-      return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-    } else {
-      return phone
+    // function underneath switches the modalview to the previous employee when the 'prev' button is clicked
+    if(e.target.id === "modal-prev"){
+      for(let i =0; i<data.length; i++){
+        let currentEmployeeName = clickedEmployee.firstElementChild.lastElementChild.firstElementChild.nextElementSibling.id;
+        if(data[i].name.last === currentEmployeeName && data.indexOf(data[i]) !== 0){
+          let prevModalEmployee = data[i-1]
+          let modalHtml = createModal(prevModalEmployee)
+          gallery.removeChild(gallery.lastElementChild)
+          gallery.insertAdjacentHTML('beforeend', modalHtml)
+        }
+      }
     }
-};
 
-// this function reformats the employees birtday.
-function reformatBirthday(date){
-  let reform = date.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
-  reform = reform[0].replace(/-/g,'');
-  return reform.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, '$2-$3-$1')
+    // function underneath switches the modalview to the next employee when the 'next' button is clicked
+    if(e.target.id === "modal-next"){
+      for(let i =0; i<data.length; i++){
+        let currentEmployeeName = clickedEmployee.firstElementChild.lastElementChild.firstElementChild.nextElementSibling.id;
+        if(data[i].name.last === currentEmployeeName && data.indexOf(data[i]) !== 11){
+          let nextModalEmployee = data[i+1]
+          let modalHtml = createModal(nextModalEmployee)
+          gallery.removeChild(gallery.lastElementChild)
+          gallery.insertAdjacentHTML('beforeend', modalHtml)
+        }
+      }
+    }
+  })
 }
 
 // function that creates a html card
@@ -126,5 +141,48 @@ function reformatBirthday(date){
     </div>
    `
    return html+=employeeHtml
+}
 
+// this function creates the modalView of an employee
+function createModal(data) {
+  let modalHtml =`
+  <div id="modal-container" class="modal-container">
+      <div class="modal">
+          <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
+          <div class="modal-info-container">
+              <img class="modal-img" src="${data.picture.large}" alt="profile picture">
+              <h3 id="${data.name.last}" class="modal-name cap">${data.name.first} ${data.name.last}</h3>
+              <p class="modal-text">${data.email}</p>
+              <p class="modal-text cap">${data.location.city}</p>
+              <hr>
+              <p class="modal-text">${reformatPhoneNumber(data.phone)}</p>
+              <p class="modal-text">${data.location.street.number} ${data.location.street.name}, ${data.location.state}, ${data.nat} ${data.location.postcode}</p>
+              <p class="modal-text">Birthday: ${reformatBirthday(data.registered.date)}</p>
+          </div>
+      </div>
+      <div class="modal-btn-container">
+          <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
+          <button type="button" id="modal-next" class="modal-next btn">Next</button>
+      </div>
+  </div>
+
+  `
+  return modalHtml
+}
+
+// this function reformats the employees phone number.
+function reformatPhoneNumber(phone) {
+    phone = phone.replace(/[^\d]/g, "");
+    if (phone.length == 10) {
+      return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+    } else {
+      return phone
+    }
+};
+
+// this function reformats the employees birtday.
+function reformatBirthday(date){
+  let reform = date.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
+  reform = reform[0].replace(/-/g,'');
+  return reform.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, '$2-$3-$1')
 }
