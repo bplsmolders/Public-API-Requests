@@ -65,9 +65,9 @@ function createHTML (data) {
                     <p class="modal-text">${data[i].email}</p>
                     <p class="modal-text cap">${data[i].location.city}</p>
                     <hr>
-                    <p class="modal-text">${data[i].phone}</p>
+                    <p class="modal-text">${reformatPhoneNumber(data[i].phone)}</p>
                     <p class="modal-text">${data[i].location.street.number} ${data[i].location.street.name}, ${data[i].location.state}, ${data[i].nat} ${data[i].location.postcode}</p>
-                    <p class="modal-text">Birthday: ${data[i].registered.date}</p>
+                    <p class="modal-text">Birthday: ${reformatBirthday(data[i].registered.date)}</p>
                 </div>
             </div>
         </div>
@@ -76,4 +76,21 @@ function createHTML (data) {
       gallery.insertAdjacentHTML('beforeend', modalHtml)
     }
   });
+}
+
+// this function reformats the employees phone number.
+function reformatPhoneNumber(phone) {
+    phone = phone.replace(/[^\d]/g, "");
+    if (phone.length == 10) {
+      return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+    } else {
+      return phone
+    }
+};
+
+// this function reformats the employees birtday.
+function reformatBirthday(date){
+  let reform = date.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
+  reform = reform[0].replace(/-/g,'');
+  return reform.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, '$2-$3-$1')
 }
