@@ -51,17 +51,19 @@ function createHTML (data) {
         filteredList = filteredList.concat(data[i]);
       }
     }
-
     let cardHtml ='';
     if (filteredList.length > 0){
       gallery.innerHTML = '';
       filteredList.map((employee) => {
         return cardHtml += createCard(employee);
       })
-    } else{
+    } else if(input.value === ''){
       data.map((employee) => {
         return cardHtml += createCard(employee);
       })
+    } else{
+      gallery.innerHTML = '';
+      cardHtml = createError()
     }
     gallery.insertAdjacentHTML('beforeend', cardHtml)
   });
@@ -143,6 +145,20 @@ function createHTML (data) {
    return html+=employeeHtml
 }
 
+// function creates a error html card
+function createError(){
+ let html='';
+ let employeeHtml = `
+   <div class="card">
+     <div class="card-info-container">
+       <h3 id="error">No Results</h3>
+     </div>
+   </div>
+  `
+  return html+=employeeHtml
+}
+
+
 // this function creates the modalView of an employee
 function createModal(data) {
   let modalHtml =`
@@ -173,16 +189,12 @@ function createModal(data) {
 // this function reformats the employees phone number.
 function reformatPhoneNumber(phone) {
     phone = phone.replace(/[^\d]/g, "");
-    if (phone.length == 10) {
-      return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-    } else {
-      return phone
-    }
+    return phone.replace(/(\d{3})(\d{3})(\d+)/, "($1) $2-$3");
 };
 
 // this function reformats the employees birtday.
 function reformatBirthday(date){
   let reform = date.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
   reform = reform[0].replace(/-/g,'');
-  return reform.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, '$2-$3-$1')
+  return reform.replace(/([0-9]{4})([0-9]{2})([0-9]{2})/, '$2/$3/$1')
 }
