@@ -127,7 +127,7 @@ function createHTML (data) {
   })
 }
 
-// function that creates a html card
+// function creates a html card
  function createCard(employee){
   let html='';
   let employeeHtml = `
